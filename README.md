@@ -1,6 +1,6 @@
 # CadregaBot
 
-An implementation for MNKGame AI for the course of Algorithms and Data Structures at the University of Bologna a.a. 2021/2022.
+An implementation for MNKGame AI for the course of Algorithms and Data Structures at the University of Bologna A.A. 2021/2022.
 
 Compile and run:
 
