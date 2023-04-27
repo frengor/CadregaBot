@@ -94,9 +94,6 @@ public final class CadregaBot implements CXPlayer {
 
             // We're the second to play, just place a dummy move
             cxBoard.markColumn(N / 2);
-            if (cxBoard.cellState(0, N/2) != opponent) {
-                throw new RuntimeException("Cella settata invalida");
-            }
             this.board[0][N / 2] = opponent;
         }
 
@@ -141,7 +138,7 @@ public final class CadregaBot implements CXPlayer {
     @Override
     public int selectColumn(CXBoard B) {
         startTime = System.currentTimeMillis();
-        Integer[] columns = B.getAvailableColumns();
+        final Integer[] columns = B.getAvailableColumns();
         // System.err.println("Loading...");
 
         // Calculates the visit depth
@@ -190,16 +187,25 @@ public final class CadregaBot implements CXPlayer {
 
             // Actually calculates the visit depth
             depth = OptimizedDepth.optimizedDepth(3, columns.length, nodesAverage);
-            // System.err.println("Depth found: " + depth);
+            System.err.println("Depth found: " + depth);
         }
 
         // System.err.println("Nodes average: " + nodesAverage);
 
         // Update board with opponent's move
-        CXCell lastOpponentMove = B.getLastMove();
+        CXCell lastOpponentMove = null;
+        {
+            CXCell lastMove = B.getLastMove();
 
-        if (lastOpponentMove != null) {
-            board[lastOpponentMove.i][lastOpponentMove.j] = lastOpponentMove.state;
+            if (lastMove != null) {
+                // Convert to our coordinate system (the bottom row is 0 instead of M)
+                int cadrega_i_coord = 0;
+                while (this.board[cadrega_i_coord][lastMove.j] != CXCellState.FREE) {
+                    cadrega_i_coord++;
+                }
+                this.board[cadrega_i_coord][lastMove.j] = lastMove.state;
+                lastOpponentMove = new CXCell(cadrega_i_coord, lastMove.j, lastMove.state);
+            }
         }
 
         // Update tmpBoard
@@ -210,14 +216,12 @@ public final class CadregaBot implements CXPlayer {
 
         outer: for (int column : columns) {
             for (int i = M - 1; i >= 0; i--) {
-                if (this.board[i][column] != CXCellState.FREE) {
+                if (this.tmpBoard[i][column] != CXCellState.FREE) {
                     freeCellsSet.add(new CXCell(i + 1, column, CXCellState.FREE));
-                    System.err.println((i + 1) + " " + column);
                     continue outer;
                 }
             }
             freeCellsSet.add(new CXCell(0, column, CXCellState.FREE));
-            System.err.println(0 + " " + column);
         }
 
         // Updates the tree (calculated in previous rounds) discarding the branches of the not selected moves
