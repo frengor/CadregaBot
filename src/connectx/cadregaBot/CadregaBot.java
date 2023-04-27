@@ -94,7 +94,7 @@ public final class CadregaBot implements CXPlayer {
 
             // We're the second to play, just place a dummy move
             cxBoard.markColumn(N / 2);
-            this.board[0][N / 2] = opponent;
+            this.board[M - 1][N / 2] = opponent;
         }
 
         // Make sure tmpBoard is the same as board
@@ -193,19 +193,9 @@ public final class CadregaBot implements CXPlayer {
         // System.err.println("Nodes average: " + nodesAverage);
 
         // Update board with opponent's move
-        CXCell lastOpponentMove = null;
-        {
-            CXCell lastMove = B.getLastMove();
-
-            if (lastMove != null) {
-                // Convert to our coordinate system (the bottom row is 0 instead of M)
-                int cadrega_i_coord = 0;
-                while (this.board[cadrega_i_coord][lastMove.j] != CXCellState.FREE) {
-                    cadrega_i_coord++;
-                }
-                this.board[cadrega_i_coord][lastMove.j] = lastMove.state;
-                lastOpponentMove = new CXCell(cadrega_i_coord, lastMove.j, lastMove.state);
-            }
+        CXCell lastOpponentMove = B.getLastMove();
+        if (lastOpponentMove != null) {
+            this.board[lastOpponentMove.i][lastOpponentMove.j] = lastOpponentMove.state;
         }
 
         // Update tmpBoard
@@ -215,13 +205,13 @@ public final class CadregaBot implements CXPlayer {
         Set<CXCell> freeCellsSet = new HashSet<>();
 
         outer: for (int column : columns) {
-            for (int i = M - 1; i >= 0; i--) {
+            for (int i = 0; i < M; i++) {
                 if (this.tmpBoard[i][column] != CXCellState.FREE) {
-                    freeCellsSet.add(new CXCell(i + 1, column, CXCellState.FREE));
+                    freeCellsSet.add(new CXCell(i - 1, column, CXCellState.FREE));
                     continue outer;
                 }
             }
-            freeCellsSet.add(new CXCell(0, column, CXCellState.FREE));
+            freeCellsSet.add(new CXCell(M - 1, column, CXCellState.FREE));
         }
 
         // Updates the tree (calculated in previous rounds) discarding the branches of the not selected moves
@@ -331,10 +321,16 @@ public final class CadregaBot implements CXPlayer {
             value = -Integer.MAX_VALUE;
             for (int i = 0; i < cells.length; i++) {
                 EvaluatedCell cell = cells[i];
+                CXCell cxCell = cell.getCell();
+                CXCell tmpCell = null;
 
                 // Update tmpBoard and FC before calling alphabeta recursively
-                tmpBoard[cell.getCell().i][cell.getCell().j] = our;
-                FC.remove(cell.getCell());
+                tmpBoard[cxCell.i][cxCell.j] = our;
+                FC.remove(cxCell);
+                if (cxCell.i != 0) {
+                    tmpCell = new CXCell(cxCell.i - 1, cxCell.j, CXCellState.FREE);
+                    FC.add(tmpCell);
+                }
 
                 // Create (or get) the child node
                 Node child;
@@ -357,8 +353,11 @@ public final class CadregaBot implements CXPlayer {
                 alpha = Math.max(value, alpha);
 
                 // Restore tmpBoard and FC
-                tmpBoard[cell.getCell().i][cell.getCell().j] = CXCellState.FREE;
-                FC.add(cell.getCell());
+                tmpBoard[cxCell.i][cxCell.j] = CXCellState.FREE;
+                if (tmpCell != null) {
+                    FC.remove(tmpCell);
+                }
+                FC.add(cxCell);
 
                 // alphabeta cutoff
                 if (beta <= alpha) {
@@ -369,10 +368,16 @@ public final class CadregaBot implements CXPlayer {
             value = Integer.MAX_VALUE;
             for (int i = 0; i < cells.length; i++) {
                 EvaluatedCell cell = cells[i];
+                CXCell cxCell = cell.getCell();
+                CXCell tmpCell = null;
 
                 // Update tmpBoard and FC before calling alphabeta recursively
-                tmpBoard[cell.getCell().i][cell.getCell().j] = opponent;
-                FC.remove(cell.getCell());
+                tmpBoard[cxCell.i][cxCell.j] = opponent;
+                FC.remove(cxCell);
+                if (cxCell.i != 0) {
+                    tmpCell = new CXCell(cxCell.i - 1, cxCell.j, CXCellState.FREE);
+                    FC.add(tmpCell);
+                }
 
                 // Create (or get) the child node
                 Node child;
@@ -395,8 +400,11 @@ public final class CadregaBot implements CXPlayer {
                 beta = Math.min(value, beta);
 
                 // Restore tmpBoard and FC
-                tmpBoard[cell.getCell().i][cell.getCell().j] = CXCellState.FREE;
-                FC.add(cell.getCell());
+                tmpBoard[cxCell.i][cxCell.j] = CXCellState.FREE;
+                if (tmpCell != null) {
+                    FC.remove(tmpCell);
+                }
+                FC.add(cxCell);
 
                 // alphabeta cutoff
                 if (beta <= alpha) {
@@ -442,10 +450,16 @@ public final class CadregaBot implements CXPlayer {
 
             for (int i = 0; i < cells.length; i++) {
                 EvaluatedCell cell = cells[i];
+                CXCell cxCell = cell.getCell();
+                CXCell tmpCell = null;
 
                 // Update tmpBoard and FC before calling alphabeta
-                tmpBoard[cell.getCell().i][cell.getCell().j] = our;
-                FC.remove(cell.getCell());
+                tmpBoard[cxCell.i][cxCell.j] = our;
+                FC.remove(cxCell);
+                if (cxCell.i != 0) {
+                    tmpCell = new CXCell(cxCell.i - 1, cxCell.j, CXCellState.FREE);
+                    FC.add(tmpCell);
+                }
 
                 // Create (or get) the child node
                 Node child;
@@ -468,8 +482,11 @@ public final class CadregaBot implements CXPlayer {
                 alpha = Math.max(value, alpha);
 
                 // Restore tmpBoard and FC
-                tmpBoard[cell.getCell().i][cell.getCell().j] = CXCellState.FREE;
-                FC.add(cell.getCell());
+                tmpBoard[cxCell.i][cxCell.j] = CXCellState.FREE;
+                if (tmpCell != null) {
+                    FC.remove(tmpCell);
+                }
+                FC.add(cxCell);
 
                 // Update bestMove if this move is better than the previous
                 if (value > bestMoveValue) {
@@ -496,11 +513,11 @@ public final class CadregaBot implements CXPlayer {
         for (CXCell cell : FC) {
             sum += evaluateUtil.simpleEvaluate(cell, our);
             sum -= evaluateUtil.simpleEvaluate(cell, opponent);
-            for (int i = cell.i + 1; i < M; i++) {
+            /*for (int i = cell.i + 1; i < M; i++) {
                 final CXCell fc = new CXCell(i, cell.j, CXCellState.FREE);
                 sum += evaluateUtil.simpleEvaluate(fc, our);
                 sum -= evaluateUtil.simpleEvaluate(fc, opponent);
-            }
+            }*/
         }
         return sum;
     }
