@@ -2,6 +2,15 @@
 
 An implementation for ConnectX AI for the course of Algorithms and Data Structures at the University of Bologna A.A. 2022/2023.
 
+Originally developed as an AI for MNKGame for the project of the prior year.
+
+> **Important note!**  
+> 
+> Currently, the bot isn't very smart on ConnectX.  
+> This is due to the heuristic not being made for ConnectX, so the results are suboptimal.  
+> Also, sometimes the selected move happens to be illegal (i.e. the selected column is already full).  
+> I don't really have the time to look into these issues. If anyone would like to fix it, any contribution is appreciated!
+
 Compile and run:
 
 ```txt
