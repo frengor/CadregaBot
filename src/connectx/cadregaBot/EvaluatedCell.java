@@ -1,6 +1,6 @@
-package mnkgame.cadregaBot;
+package connectx.cadregaBot;
 
-import mnkgame.MNKCell;
+import connectx.CXCell;
 
 /**
  * A cell which has been evaluated by the heuristic.
@@ -12,26 +12,26 @@ import mnkgame.MNKCell;
  */
 public final class EvaluatedCell {
 
-    private final MNKCell cell;
+    private final CXCell cell;
     private final int value;
 
     /**
      * Creates a new {@code EvaluatedCell}.
      *
-     * @param cell The {@link MNKCell}.
+     * @param cell The {@link CXCell}.
      * @param value The heuristic value of cell.
      */
-    public EvaluatedCell(MNKCell cell, int value) {
+    public EvaluatedCell(CXCell cell, int value) {
         this.cell = cell;
         this.value = value;
     }
 
     /**
-     * Returns the {@link MNKCell}.
+     * Returns the {@link CXCell}.
      *
-     * @return The {@link MNKCell}.
+     * @return The {@link CXCell}.
      */
-    public MNKCell getCell() {
+    public CXCell getCell() {
         return cell;
     }
 

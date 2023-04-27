@@ -1,4 +1,4 @@
-package mnkgame.cadregaBot;
+package connectx.cadregaBot;
 
 import java.util.LinkedList;
 

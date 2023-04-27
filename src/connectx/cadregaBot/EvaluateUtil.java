@@ -1,9 +1,9 @@
-package mnkgame.cadregaBot;
+package connectx.cadregaBot;
 
-import mnkgame.MNKCell;
-import mnkgame.MNKCellState;
+import connectx.CXCell;
+import connectx.CXCellState;
 
-import static mnkgame.cadregaBot.CadregaBot.OUR_VICTORY;
+import static connectx.cadregaBot.CadregaBot.OUR_VICTORY;
 
 /**
  * Utility class to compute the heuristic.
@@ -11,7 +11,7 @@ import static mnkgame.cadregaBot.CadregaBot.OUR_VICTORY;
 public final class EvaluateUtil {
 
     private final int M, N, K;
-    private final MNKCellState[][] tmpBoard;
+    private final CXCellState[][] tmpBoard;
 
     /**
      * Creates a new {@code EvaluateUtil}.
@@ -21,7 +21,7 @@ public final class EvaluateUtil {
      * @param K The K value of (M, N, K).
      * @param tmpBoard The tmpBoard.
      */
-    public EvaluateUtil(int M, int N, int K, MNKCellState[][] tmpBoard) {
+    public EvaluateUtil(int M, int N, int K, CXCellState[][] tmpBoard) {
         this.M = M;
         this.N = N;
         this.K = K;
@@ -35,7 +35,7 @@ public final class EvaluateUtil {
      * @param player The player who makes the move.
      * @return The heuristic value of the provided cell. It is {@link CadregaBot#OUR_VICTORY OUR_VICTORY} if this move makes the provided player wins.
      */
-    public int evaluate(MNKCell cell, MNKCellState player) {
+    public int evaluate(CXCell cell, CXCellState player) {
         int val = 0;
         boolean diagonals = true;
 
@@ -86,18 +86,18 @@ public final class EvaluateUtil {
      * @return The heuristic value of the provided cell looking only at its column. It is
      * {@link CadregaBot#OUR_VICTORY OUR_VICTORY} if this move makes the provided player wins.
      */
-    private int evaluateVertical(MNKCell cell, MNKCellState player) {
+    private int evaluateVertical(CXCell cell, CXCellState player) {
         int first = cell.i, last = cell.i, counter = 1; // counter is initialized at 1 since we're already counting the player move
         int minFirst = Math.max(first - K + 1, 0), maxLast = Math.min(last + K - 1, M - 1);
         boolean notFound = true;
         // Search the longest contiguous sequence of free or player's cells (containing the provided cell)
         while (first > minFirst) {
-            MNKCellState b = tmpBoard[first - 1][cell.j];
+            CXCellState b = tmpBoard[first - 1][cell.j];
             if (b == player) {
                 if (notFound) {
                     counter++;
                 }
-            } else if (b == MNKCellState.FREE) {
+            } else if (b == CXCellState.FREE) {
                 notFound = false;
             } else {
                 break;
@@ -106,12 +106,12 @@ public final class EvaluateUtil {
         }
         notFound = true;
         while (last < maxLast) {
-            MNKCellState b = tmpBoard[last + 1][cell.j];
+            CXCellState b = tmpBoard[last + 1][cell.j];
             if (b == player) {
                 if (notFound) {
                     counter++;
                 }
-            } else if (b == MNKCellState.FREE) {
+            } else if (b == CXCellState.FREE) {
                 notFound = false;
             } else {
                 break;
@@ -159,18 +159,18 @@ public final class EvaluateUtil {
      * @return The heuristic value of the provided cell looking only at its row. It is
      * {@link CadregaBot#OUR_VICTORY OUR_VICTORY} if this move makes the provided player wins.
      */
-    private int evaluateHorizontal(MNKCell cell, MNKCellState player) {
+    private int evaluateHorizontal(CXCell cell, CXCellState player) {
         int first = cell.j, last = cell.j, counter = 1; // counter is initialized at 1 since we're already counting the player move
         int minFirst = Math.max(first - K + 1, 0), maxLast = Math.min(last + K - 1, N - 1);
         boolean notFound = true;
         // Search the longest contiguous sequence of free or player's cells (containing the provided cell)
         while (first > minFirst) {
-            MNKCellState b = tmpBoard[cell.i][first - 1];
+            CXCellState b = tmpBoard[cell.i][first - 1];
             if (b == player) {
                 if (notFound) {
                     counter++;
                 }
-            } else if (b == MNKCellState.FREE) {
+            } else if (b == CXCellState.FREE) {
                 notFound = false;
             } else {
                 break;
@@ -179,12 +179,12 @@ public final class EvaluateUtil {
         }
         notFound = true;
         while (last < maxLast) {
-            MNKCellState b = tmpBoard[cell.i][last + 1];
+            CXCellState b = tmpBoard[cell.i][last + 1];
             if (b == player) {
                 if (notFound) {
                     counter++;
                 }
-            } else if (b == MNKCellState.FREE) {
+            } else if (b == CXCellState.FREE) {
                 notFound = false;
             } else {
                 break;
@@ -233,7 +233,7 @@ public final class EvaluateUtil {
      * @return The heuristic value of the provided cell looking only at its main diagonal. It is
      * {@link CadregaBot#OUR_VICTORY OUR_VICTORY} if this move makes the provided player wins.
      */
-    private int evaluateMainDiagonal(MNKCell cell, MNKCellState player) {
+    private int evaluateMainDiagonal(CXCell cell, CXCellState player) {
         // The main diagonal goes from top left to bottom right (\)
 
         int firstI = cell.i, firstJ = cell.j, lastI = cell.i, lastJ = cell.j, counter = 1; // counter is initialized at 1 since we're already counting the player move
@@ -241,12 +241,12 @@ public final class EvaluateUtil {
         boolean notFound = true;
         // Search the longest contiguous sequence of free or player's cells (containing the provided cell)
         while (firstI > minFirstI && firstJ > minFirstJ) {
-            MNKCellState b = tmpBoard[firstI - 1][firstJ - 1];
+            CXCellState b = tmpBoard[firstI - 1][firstJ - 1];
             if (b == player) {
                 if (notFound) {
                     counter++;
                 }
-            } else if (b == MNKCellState.FREE) {
+            } else if (b == CXCellState.FREE) {
                 notFound = false;
             } else {
                 break;
@@ -256,12 +256,12 @@ public final class EvaluateUtil {
         }
         notFound = true;
         while (lastI < maxLastI && lastJ < maxLastJ) {
-            MNKCellState b = tmpBoard[lastI + 1][lastJ + 1];
+            CXCellState b = tmpBoard[lastI + 1][lastJ + 1];
             if (b == player) {
                 if (notFound) {
                     counter++;
                 }
-            } else if (b == MNKCellState.FREE) {
+            } else if (b == CXCellState.FREE) {
                 notFound = false;
             } else {
                 break;
@@ -311,7 +311,7 @@ public final class EvaluateUtil {
      * @return The heuristic value of the provided cell looking only at its inverted diagonal. It is
      * {@link CadregaBot#OUR_VICTORY OUR_VICTORY} if this move makes the provided player wins.
      */
-    private int evaluateInvertedDiagonal(MNKCell cell, MNKCellState player) {
+    private int evaluateInvertedDiagonal(CXCell cell, CXCellState player) {
         // The inverted diagonal goes from bottom left to top right (/)
 
         int firstI = cell.i, firstJ = cell.j, lastI = cell.i, lastJ = cell.j, counter = 1; // counter is initialized at 1 since we're already counting the player move
@@ -319,12 +319,12 @@ public final class EvaluateUtil {
         boolean notFound = true;
         // Search the longest contiguous sequence of free or player's cells (containing the provided cell)
         while (firstI < minFirstI && firstJ > minFirstJ) {
-            MNKCellState b = tmpBoard[firstI + 1][firstJ - 1];
+            CXCellState b = tmpBoard[firstI + 1][firstJ - 1];
             if (b == player) {
                 if (notFound) {
                     counter++;
                 }
-            } else if (b == MNKCellState.FREE) {
+            } else if (b == CXCellState.FREE) {
                 notFound = false;
             } else {
                 break;
@@ -334,12 +334,12 @@ public final class EvaluateUtil {
         }
         notFound = true;
         while (lastI > maxLastI && lastJ < maxLastJ) {
-            MNKCellState b = tmpBoard[lastI - 1][lastJ + 1];
+            CXCellState b = tmpBoard[lastI - 1][lastJ + 1];
             if (b == player) {
                 if (notFound) {
                     counter++;
                 }
-            } else if (b == MNKCellState.FREE) {
+            } else if (b == CXCellState.FREE) {
                 notFound = false;
             } else {
                 break;
@@ -387,7 +387,7 @@ public final class EvaluateUtil {
      * @param player The player which makes the move.
      * @return Whether the player wins with the provided move.
      */
-    public boolean isWinningCell(MNKCell cell, MNKCellState player) {
+    public boolean isWinningCell(CXCell cell, CXCellState player) {
         boolean diagonals = true;
 
         if (M >= K) {
@@ -426,12 +426,12 @@ public final class EvaluateUtil {
      * @param player The player which makes the move.
      * @return Whether the player wins with the provided move looking only at its column.
      */
-    private boolean isWinningVertical(MNKCell cell, MNKCellState player) {
+    private boolean isWinningVertical(CXCell cell, CXCellState player) {
         int first = cell.i, last = cell.i, counter = 1; // counter is initialized at 1 since we're already counting the player move
         int minFirst = Math.max(first - K + 1, 0), maxLast = Math.min(last + K - 1, M - 1);
         // Checking if there is a contiguous sequence of player's cells (containing this cell)
         while (first > minFirst) {
-            MNKCellState b = tmpBoard[first - 1][cell.j];
+            CXCellState b = tmpBoard[first - 1][cell.j];
             if (b == player) {
                 counter++;
             } else {
@@ -440,7 +440,7 @@ public final class EvaluateUtil {
             first--;
         }
         while (last < maxLast) {
-            MNKCellState b = tmpBoard[last + 1][cell.j];
+            CXCellState b = tmpBoard[last + 1][cell.j];
             if (b == player) {
                 counter++;
             } else {
@@ -458,12 +458,12 @@ public final class EvaluateUtil {
      * @param player The player which makes the move.
      * @return Whether the player wins with the provided move looking only at its row.
      */
-    private boolean isWinningHorizontal(MNKCell cell, MNKCellState player) {
+    private boolean isWinningHorizontal(CXCell cell, CXCellState player) {
         int first = cell.j, last = cell.j, counter = 1; // counter is initialized at 1 since we're already counting the player move
         int minFirst = Math.max(first - K + 1, 0), maxLast = Math.min(last + K - 1, N - 1);
         // Checking if there is a contiguous sequence of player's cells (containing this cell)
         while (first > minFirst) {
-            MNKCellState b = tmpBoard[cell.i][first - 1];
+            CXCellState b = tmpBoard[cell.i][first - 1];
             if (b == player) {
                 counter++;
             } else {
@@ -472,7 +472,7 @@ public final class EvaluateUtil {
             first--;
         }
         while (last < maxLast) {
-            MNKCellState b = tmpBoard[cell.i][last + 1];
+            CXCellState b = tmpBoard[cell.i][last + 1];
             if (b == player) {
                 counter++;
             } else {
@@ -492,14 +492,14 @@ public final class EvaluateUtil {
      * @param player The player which makes the move.
      * @return Whether the player wins with the provided move looking only at its main diagonal.
      */
-    private boolean isWinningMainDiagonal(MNKCell cell, MNKCellState player) {
+    private boolean isWinningMainDiagonal(CXCell cell, CXCellState player) {
         // The main diagonal goes from top left to bottom right (\)
 
         int firstI = cell.i, firstJ = cell.j, lastI = cell.i, lastJ = cell.j, counter = 1; // counter is initialized at 1 since we're already counting the player move
         int minFirstI = Math.max(firstI - K + 1, 0), minFirstJ = Math.max(firstJ - K + 1, 0), maxLastI = Math.min(lastI + K - 1, M - 1), maxLastJ = Math.min(lastJ + K - 1, N - 1);
         // Checking if there is a contiguous sequence of player's cells (containing this cell)
         while (firstI > minFirstI && firstJ > minFirstJ) {
-            MNKCellState b = tmpBoard[firstI - 1][firstJ - 1];
+            CXCellState b = tmpBoard[firstI - 1][firstJ - 1];
             if (b == player) {
                 counter++;
             } else {
@@ -509,7 +509,7 @@ public final class EvaluateUtil {
             firstJ--;
         }
         while (lastI < maxLastI && lastJ < maxLastJ) {
-            MNKCellState b = tmpBoard[lastI + 1][lastJ + 1];
+            CXCellState b = tmpBoard[lastI + 1][lastJ + 1];
             if (b == player) {
                 counter++;
             } else {
@@ -530,14 +530,14 @@ public final class EvaluateUtil {
      * @param player The player which makes the move.
      * @return Whether the player wins with the provided move looking only at its inverted diagonal.
      */
-    private boolean isWinningInvertedDiagonal(MNKCell cell, MNKCellState player) {
+    private boolean isWinningInvertedDiagonal(CXCell cell, CXCellState player) {
         // The inverted diagonal goes from bottom left to top right (/)
 
         int firstI = cell.i, firstJ = cell.j, lastI = cell.i, lastJ = cell.j, counter = 1; // counter is initialized at 1 since we're already counting the player move
         int minFirstI = Math.min(firstI + K - 1, M - 1), minFirstJ = Math.max(firstJ - K + 1, 0), maxLastI = Math.max(lastI - K + 1, 0), maxLastJ = Math.min(lastJ + K - 1, N - 1);
         // Checking if there is a contiguous sequence of player's cells (containing this cell)
         while (firstI < minFirstI && firstJ > minFirstJ) {
-            MNKCellState b = tmpBoard[firstI + 1][firstJ - 1];
+            CXCellState b = tmpBoard[firstI + 1][firstJ - 1];
             if (b == player) {
                 counter++;
             } else {
@@ -547,7 +547,7 @@ public final class EvaluateUtil {
             firstJ--;
         }
         while (lastI > maxLastI && lastJ < maxLastJ) {
-            MNKCellState b = tmpBoard[lastI - 1][lastJ + 1];
+            CXCellState b = tmpBoard[lastI - 1][lastJ + 1];
             if (b == player) {
                 counter++;
             } else {
@@ -567,7 +567,7 @@ public final class EvaluateUtil {
      * @param player The player who makes the move.
      * @return The heuristic value of the provided cell.
      */
-    public int simpleEvaluate(MNKCell cell, MNKCellState player) {
+    public int simpleEvaluate(CXCell cell, CXCellState player) {
         int val = 0;
         boolean diagonals = true;
 
@@ -602,20 +602,20 @@ public final class EvaluateUtil {
      * @param player The player who makes the move.
      * @return The heuristic value of the provided cell looking only at its column.
      */
-    private int simpleEvaluateVertical(MNKCell cell, MNKCellState player) {
+    private int simpleEvaluateVertical(CXCell cell, CXCellState player) {
         int first = cell.i, last = cell.i;
         int minFirst = Math.max(first - K + 1, 0), maxLast = Math.min(last + K - 1, M - 1);
         // Search the longest contiguous sequence of free or player's cells (containing the provided cell)
         while (first > minFirst) {
-            MNKCellState b = tmpBoard[first - 1][cell.j];
-            if (!(b == player || b == MNKCellState.FREE)) {
+            CXCellState b = tmpBoard[first - 1][cell.j];
+            if (!(b == player || b == CXCellState.FREE)) {
                 break;
             }
             first--;
         }
         while (last < maxLast) {
-            MNKCellState b = tmpBoard[last + 1][cell.j];
-            if (!(b == player || b == MNKCellState.FREE)) {
+            CXCellState b = tmpBoard[last + 1][cell.j];
+            if (!(b == player || b == CXCellState.FREE)) {
                 break;
             }
             last++;
@@ -656,20 +656,20 @@ public final class EvaluateUtil {
      * @param player The player who makes the move.
      * @return The heuristic value of the provided cell looking only at its row.
      */
-    private int simpleEvaluateHorizontal(MNKCell cell, MNKCellState player) {
+    private int simpleEvaluateHorizontal(CXCell cell, CXCellState player) {
         int first = cell.j, last = cell.j;
         int minFirst = Math.max(first - K + 1, 0), maxLast = Math.min(last + K - 1, N - 1);
         // Search the longest contiguous sequence of free or player's cells (containing the provided cell)
         while (first > minFirst) {
-            MNKCellState b = tmpBoard[cell.i][first - 1];
-            if (!(b == player || b == MNKCellState.FREE)) {
+            CXCellState b = tmpBoard[cell.i][first - 1];
+            if (!(b == player || b == CXCellState.FREE)) {
                 break;
             }
             first--;
         }
         while (last < maxLast) {
-            MNKCellState b = tmpBoard[cell.i][last + 1];
-            if (!(b == player || b == MNKCellState.FREE)) {
+            CXCellState b = tmpBoard[cell.i][last + 1];
+            if (!(b == player || b == CXCellState.FREE)) {
                 break;
             }
             last++;
@@ -710,23 +710,23 @@ public final class EvaluateUtil {
      * @param player The player who makes the move.
      * @return The heuristic value of the provided cell looking only at its main diagonal.
      */
-    private int simpleEvaluateMainDiagonal(MNKCell cell, MNKCellState player) {
+    private int simpleEvaluateMainDiagonal(CXCell cell, CXCellState player) {
         // The main diagonal goes from top left to bottom right (\)
 
         int firstI = cell.i, firstJ = cell.j, lastI = cell.i, lastJ = cell.j;
         int minFirstI = Math.max(firstI - K + 1, 0), minFirstJ = Math.max(firstJ - K + 1, 0), maxLastI = Math.min(lastI + K - 1, M - 1), maxLastJ = Math.min(lastJ + K - 1, N - 1);
         // Search the longest contiguous sequence of free or player's cells (containing the provided cell)
         while (firstI > minFirstI && firstJ > minFirstJ) {
-            MNKCellState b = tmpBoard[firstI - 1][firstJ - 1];
-            if (!(b == player || b == MNKCellState.FREE)) {
+            CXCellState b = tmpBoard[firstI - 1][firstJ - 1];
+            if (!(b == player || b == CXCellState.FREE)) {
                 break;
             }
             firstI--;
             firstJ--;
         }
         while (lastI < maxLastI && lastJ < maxLastJ) {
-            MNKCellState b = tmpBoard[lastI + 1][lastJ + 1];
-            if (!(b == player || b == MNKCellState.FREE)) {
+            CXCellState b = tmpBoard[lastI + 1][lastJ + 1];
+            if (!(b == player || b == CXCellState.FREE)) {
                 break;
             }
             lastI++;
@@ -768,23 +768,23 @@ public final class EvaluateUtil {
      * @param player The player who makes the move.
      * @return The heuristic value of the provided cell looking only at its inverted diagonal.
      */
-    private int simpleEvaluateInvertedDiagonal(MNKCell cell, MNKCellState player) {
+    private int simpleEvaluateInvertedDiagonal(CXCell cell, CXCellState player) {
         // The inverted diagonal goes from bottom left to top right (/)
 
         int firstI = cell.i, firstJ = cell.j, lastI = cell.i, lastJ = cell.j;
         int minFirstI = Math.min(firstI + K - 1, M - 1), minFirstJ = Math.max(firstJ - K + 1, 0), maxLastI = Math.max(lastI - K + 1, 0), maxLastJ = Math.min(lastJ + K - 1, N - 1);
         // Search the longest contiguous sequence of free or player's cells (containing the provided cell)
         while (firstI < minFirstI && firstJ > minFirstJ) {
-            MNKCellState b = tmpBoard[firstI + 1][firstJ - 1];
-            if (!(b == player || b == MNKCellState.FREE)) {
+            CXCellState b = tmpBoard[firstI + 1][firstJ - 1];
+            if (!(b == player || b == CXCellState.FREE)) {
                 break;
             }
             firstI++;
             firstJ--;
         }
         while (lastI > maxLastI && lastJ < maxLastJ) {
-            MNKCellState b = tmpBoard[lastI - 1][lastJ + 1];
-            if (!(b == player || b == MNKCellState.FREE)) {
+            CXCellState b = tmpBoard[lastI - 1][lastJ + 1];
+            if (!(b == player || b == CXCellState.FREE)) {
                 break;
             }
             lastI--;

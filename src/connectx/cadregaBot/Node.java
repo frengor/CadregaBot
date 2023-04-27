@@ -1,6 +1,6 @@
-package mnkgame.cadregaBot;
+package connectx.cadregaBot;
 
-import mnkgame.MNKCell;
+import connectx.CXCell;
 
 /**
  * A node of the alphabeta tree.
@@ -97,7 +97,7 @@ public final class Node {
      * @param move The cell to search for.
      * @return The child node if it exists, {@code null} otherwise.
      */
-    public Node selectChildByMove(MNKCell move) {
+    public Node selectChildByMove(CXCell move) {
         if (children == null) {
             return null;
         }
@@ -105,7 +105,7 @@ public final class Node {
             if (n == null) {
                 break;
             }
-            MNKCell cell = n.getCell().getCell();
+            CXCell cell = n.getCell().getCell();
             if (cell.i == move.i && cell.j == move.j) {
                 return n;
             }

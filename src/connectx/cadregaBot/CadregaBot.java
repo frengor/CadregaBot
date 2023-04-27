@@ -1,8 +1,9 @@
-package mnkgame.cadregaBot;
+package connectx.cadregaBot;
 
-import mnkgame.MNKCell;
-import mnkgame.MNKCellState;
-import mnkgame.MNKPlayer;
+import connectx.CXBoard;
+import connectx.CXCell;
+import connectx.CXCellState;
+import connectx.CXPlayer;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -16,20 +17,20 @@ import java.util.Set;
  * <br>
  * Facciamogli l'inganno della cadrega!
  */
-public final class CadregaBot implements MNKPlayer {
+public final class CadregaBot implements CXPlayer {
     // Here and there there are commented lines of code that are useful for debugging
 
     public static final int OUR_VICTORY = Integer.MAX_VALUE - 1, OPPONENT_VICTORY = Integer.MAX_VALUE - 2;
     private static final int DEFAULT_DEPTH = 6;
     private int depth = DEFAULT_DEPTH;
 
-    private int M, N, K;
+    private int M, N, X;
 
-    // Variables used to keep track of selectCell's execution time
+    // Variables used to keep track of selectColumn's execution time
     private long timeout, startTime, oldExecutionTime = -1;
 
-    private MNKCellState[][] board, tmpBoard; // board reflects the actual board state, tmpBoard is used for computations
-    private MNKCellState our, opponent;
+    private CXCellState[][] board, tmpBoard; // board reflects the actual board state, tmpBoard is used for computations
+    private CXCellState our, opponent;
     private EvaluateUtil evaluateUtil;
     private Node root, bestMove; // root is the first node analyzed of the tree, bestMove is the best move found yet
 
@@ -44,19 +45,19 @@ public final class CadregaBot implements MNKPlayer {
     }
 
     /**
-     * Initialize the (M,N,K) Player
+     * Initialize the (M,N) Player
      *
-     * @param M Board rows
-     * @param N Board columns
-     * @param K Number of symbols to be aligned (horizontally, vertically, diagonally) for a win
-     * @param first True if it is the first player, False otherwise
-     * @param timeout_in_secs Maximum amount of time (in seconds) for selectCell
+     * @param M               Board rows
+     * @param N               Board columns
+     * @param X               Number of coins to be aligned (horizontally, vertically, diagonally) for a win
+     * @param first           True if it is the first player, False otherwise
+     * @param timeout_in_secs Maximum amount of time (in seconds) for initialization and for selecting a column
      */
     @Override
-    public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
+    public void initPlayer(int M, int N, int X, boolean first, int timeout_in_secs) {
         this.M = M;
         this.N = N;
-        this.K = K;
+        this.X = X;
         this.timeout = (timeout_in_secs * 1000L) - 1000L; // Keeping a margin of a second for the initialization
 
         // Reset fields
@@ -70,66 +71,52 @@ public final class CadregaBot implements MNKPlayer {
         this.alphabetaStarted = false;
 
         // Create the boards and initialize them
-        this.board = new MNKCellState[M][N];
-        this.tmpBoard = new MNKCellState[M][N];
+        this.board = new CXCellState[M][N];
+        this.tmpBoard = new CXCellState[M][N];
 
         for (int i = 0; i < M; i++) {
             for (int j = 0; j < N; j++) {
-                board[i][j] = MNKCellState.FREE;
+                board[i][j] = CXCellState.FREE;
             }
         }
 
-        // Run selectCell on a dummy board to collect data in order to be able to calculate nodesAverage on our first (real) move
+        // Run selectColumn on a dummy board to collect data in order to be able to calculate nodesAverage on our first (real) move
 
-        // We need FC and MC to call selectCell
-        MNKCell[] FC, MC;
+        // We need a CXBoard to call selectColumn
+        CXBoard cxBoard = new CXBoard(M,N,X);
 
         if (first) {
-            our = MNKCellState.P1;
-            opponent = MNKCellState.P2;
-
-            FC = new MNKCell[M * N];
-            MC = new MNKCell[0];
+            our = CXCellState.P1;
+            opponent = CXCellState.P2;
         } else {
-            our = MNKCellState.P2;
-            opponent = MNKCellState.P1;
+            our = CXCellState.P2;
+            opponent = CXCellState.P1;
 
             // We're the second to play, just place a dummy move
-            this.board[M / 2][N / 2] = opponent;
-
-            FC = new MNKCell[M * N - 1];
-            MC = new MNKCell[1];
-        }
-
-        // Fill FC and MC
-        int n = 0, k = 0;
-        for (int i = 0; i < M; i++) {
-            for (int j = 0; j < N; j++) {
-                if (this.board[i][j] == MNKCellState.FREE) { // Always true if we're the first moving
-                    FC[n++] = new MNKCell(i, j, MNKCellState.FREE);
-                } else {
-                    MC[k++] = new MNKCell(i, j, this.board[i][j]);
-                }
+            cxBoard.markColumn(N / 2);
+            if (cxBoard.cellState(0, N/2) != opponent) {
+                throw new RuntimeException("Cella settata invalida");
             }
+            this.board[0][N / 2] = opponent;
         }
 
         // Make sure tmpBoard is the same as board
         // This is not really needed, since it will be done by selectCell, that's just to be sure there aren't nulls in tmpBoard at the start of selectCell
         copyTmpBoard();
 
-        this.evaluateUtil = new EvaluateUtil(M, N, K, tmpBoard);
+        this.evaluateUtil = new EvaluateUtil(M, N, X, tmpBoard);
 
         try {
-            if (FC.length > 0) { // Don't execute selectCell with zero free cells (this happens on (1, 1, 1) games when we are the second player)
-                selectCell(FC, MC);
+            if (cxBoard.numOfFreeCells() > 0) { // Don't execute selectCell with zero free cells (this happens on (1, 1, 1) games when we are the second player)
+                selectColumn(cxBoard);
             }
         } catch (Exception ignored) {
-            // System.out.println("TIMEOUT");
+            // System.err.println("TIMEOUT");
         } finally {
             // Reset board, tmpBoard, root, bestMove and depth since we ran on a dummy board
             for (int i = 0; i < M; i++) {
                 for (int j = 0; j < N; j++) {
-                    board[i][j] = MNKCellState.FREE;
+                    board[i][j] = CXCellState.FREE;
                 }
             }
 
@@ -145,22 +132,23 @@ public final class CadregaBot implements MNKPlayer {
     }
 
     /**
-     * Select a position among those listed in the <code>FC</code> array
+     * Select a move (a column index)
      *
-     * @param FC Free Cells: array of free cells
-     * @param MC Marked Cells: array of already marked cells, ordered with respect to the game moves (first move is in the first position, etc)
-     * @return an element of <code>FC</code>
+     * @param B A CXBoard object representing the current state of the game
+     *
+     * @return a column index
      */
     @Override
-    public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
+    public int selectColumn(CXBoard B) {
         startTime = System.currentTimeMillis();
-        // System.out.println("Loading...");
+        Integer[] columns = B.getAvailableColumns();
+        // System.err.println("Loading...");
 
         // Calculates the visit depth
         if (nodeCounter == 0) {
             // Corner case (which should happen only the first time selectCell is run in initPlayer)
             depth = DEFAULT_DEPTH;
-            // System.out.println("Default depth: " + depth);
+            // System.err.println("Default depth: " + depth);
         } else {
             if (oldExecutionTime < timeout) { // Adjust the nodeCounter
                 if (oldExecutionTime < 0) { // Invalid oldExecutionTime, just assume we can analyze the full tree
@@ -201,16 +189,16 @@ public final class CadregaBot implements MNKPlayer {
             this.alphabetaStarted = false;
 
             // Actually calculates the visit depth
-            depth = OptimizedDepth.optimizedDepth(3, FC.length, nodesAverage);
-            // System.out.println("Depth found: " + depth);
+            depth = OptimizedDepth.optimizedDepth(3, columns.length, nodesAverage);
+            // System.err.println("Depth found: " + depth);
         }
 
-        // System.out.println("Nodes average: " + nodesAverage);
+        // System.err.println("Nodes average: " + nodesAverage);
 
         // Update board with opponent's move
-        MNKCell lastOpponentMove = null;
-        if (MC.length > 0) {
-            lastOpponentMove = MC[MC.length - 1];
+        CXCell lastOpponentMove = B.getLastMove();
+
+        if (lastOpponentMove != null) {
             board[lastOpponentMove.i][lastOpponentMove.j] = lastOpponentMove.state;
         }
 
@@ -218,7 +206,19 @@ public final class CadregaBot implements MNKPlayer {
         copyTmpBoard();
 
         // Using a hash table for O(1) operations
-        Set<MNKCell> freeCellsSet = new HashSet<>(Arrays.asList(FC));
+        Set<CXCell> freeCellsSet = new HashSet<>();
+
+        outer: for (int column : columns) {
+            for (int i = M - 1; i >= 0; i--) {
+                if (this.board[i][column] != CXCellState.FREE) {
+                    freeCellsSet.add(new CXCell(i + 1, column, CXCellState.FREE));
+                    System.err.println((i + 1) + " " + column);
+                    continue outer;
+                }
+            }
+            freeCellsSet.add(new CXCell(0, column, CXCellState.FREE));
+            System.err.println(0 + " " + column);
+        }
 
         // Updates the tree (calculated in previous rounds) discarding the branches of the not selected moves
         // If it hasn't been calculated it runs the heuristic on the current table
@@ -247,20 +247,20 @@ public final class CadregaBot implements MNKPlayer {
             // -Integer.MAX_VALUE is used instead of Integer.MIN_VALUE because -Integer.MIN_VALUE overflows (due to two's complement)
             alphabetaStart(root, -Integer.MAX_VALUE, Integer.MAX_VALUE, depth, freeCellsSet);
         } catch (Exception ignored) {
-            // System.out.println("TIMEOUT");
+            // System.err.println("TIMEOUT");
         }
 
         oldExecutionTime = System.currentTimeMillis() - startTime;
 
-        // System.out.print("Best move: ");
-        // System.out.println(bestMove != null ? bestMove.getCell().getCell().i + " " + bestMove.getCell().getCell().j : "null");
-        // System.out.println("Nodes counted this round: " + nodeCounter + " in " + oldExecutionTime + " ms");
-        // System.out.println("");
+        // System.err.print("Best move: ");
+        // System.err.println(bestMove != null ? bestMove.getCell().getCell().i + " " + bestMove.getCell().getCell().j : "null");
+        // System.err.println("Nodes counted this round: " + nodeCounter + " in " + oldExecutionTime + " ms");
+        // System.err.println("");
 
         // Save the selected move into this.board and returns it
         // bestMove is null when we block an opponent win, we can win in a move or the first branch of the tree hasn't been completely visited in time
         // In all of those cases the best move to do is the one indicated by the heuristic, so cells[0]
-        return saveMove(bestMove == null ? cells[0].getCell() : bestMove.getCell().getCell());
+        return saveMove(bestMove == null ? cells[0].getCell() : bestMove.getCell().getCell()).j;
     }
 
     /**
@@ -295,7 +295,7 @@ public final class CadregaBot implements MNKPlayer {
      * @param FC The set containing the free cells.
      * @return The result of the alphabeta visit.
      */
-    private int alphabeta(Node node, int alpha, int beta, int depth, MNKCellState player, Set<MNKCell> FC) {
+    private int alphabeta(Node node, int alpha, int beta, int depth, CXCellState player, Set<CXCell> FC) {
         checkTime();
 
         // Keep track of analyzed nodes
@@ -353,7 +353,7 @@ public final class CadregaBot implements MNKPlayer {
                 alpha = Math.max(value, alpha);
 
                 // Restore tmpBoard and FC
-                tmpBoard[cell.getCell().i][cell.getCell().j] = MNKCellState.FREE;
+                tmpBoard[cell.getCell().i][cell.getCell().j] = CXCellState.FREE;
                 FC.add(cell.getCell());
 
                 // alphabeta cutoff
@@ -391,7 +391,7 @@ public final class CadregaBot implements MNKPlayer {
                 beta = Math.min(value, beta);
 
                 // Restore tmpBoard and FC
-                tmpBoard[cell.getCell().i][cell.getCell().j] = MNKCellState.FREE;
+                tmpBoard[cell.getCell().i][cell.getCell().j] = CXCellState.FREE;
                 FC.add(cell.getCell());
 
                 // alphabeta cutoff
@@ -414,7 +414,7 @@ public final class CadregaBot implements MNKPlayer {
      * @param depth The depth of the visit.
      * @param FC The set containing the free cells.
      */
-    private void alphabetaStart(Node node, int alpha, int beta, int depth, Set<MNKCell> FC) {
+    private void alphabetaStart(Node node, int alpha, int beta, int depth, Set<CXCell> FC) {
         checkTime();
 
         // Keep track of analyzed nodes
@@ -464,7 +464,7 @@ public final class CadregaBot implements MNKPlayer {
                 alpha = Math.max(value, alpha);
 
                 // Restore tmpBoard and FC
-                tmpBoard[cell.getCell().i][cell.getCell().j] = MNKCellState.FREE;
+                tmpBoard[cell.getCell().i][cell.getCell().j] = CXCellState.FREE;
                 FC.add(cell.getCell());
 
                 // Update bestMove if this move is better than the previous
@@ -487,17 +487,22 @@ public final class CadregaBot implements MNKPlayer {
      * @param FC The set containing the free cells.
      * @return The evaluation of the board.
      */
-    private int simpleEvaluateTmpBoard(Set<MNKCell> FC) {
+    private int simpleEvaluateTmpBoard(Set<CXCell> FC) {
         int sum = 0;
-        for (MNKCell cell : FC) {
+        for (CXCell cell : FC) {
             sum += evaluateUtil.simpleEvaluate(cell, our);
             sum -= evaluateUtil.simpleEvaluate(cell, opponent);
+            for (int i = cell.i + 1; i < M; i++) {
+                final CXCell fc = new CXCell(i, cell.j, CXCellState.FREE);
+                sum += evaluateUtil.simpleEvaluate(fc, our);
+                sum -= evaluateUtil.simpleEvaluate(fc, opponent);
+            }
         }
         return sum;
     }
 
     /**
-     * Returns an array of {@link EvaluatedCell} sorted by best move (using the heuristic provided by {@link EvaluateUtil#evaluate(MNKCell, MNKCellState)}).
+     * Returns an array of {@link EvaluatedCell} sorted by best move (using the heuristic provided by {@link EvaluateUtil#evaluate(CXCell, CXCellState)}).
      * If there is a move that leads to an immediate victory, either of the current player or the opponent,
      * the returned array has length of 1 and contains only that move.
      *
@@ -505,13 +510,13 @@ public final class CadregaBot implements MNKPlayer {
      * @param player Whose player the turn is.
      * @return An array of {@link EvaluatedCell} sorted by best move.
      */
-    private EvaluatedCell[] complexEvaluateTmpBoard(Set<MNKCell> FC, MNKCellState player) {
+    private EvaluatedCell[] complexEvaluateTmpBoard(Set<CXCell> FC, CXCellState player) {
         EvaluatedCell[] cells = new EvaluatedCell[FC.size()]; // The array to return
         int index = 0; // The index of the next element to insert
 
-        Iterator<MNKCell> it = FC.iterator(); // Iterator over the Set of FC
+        Iterator<CXCell> it = FC.iterator(); // Iterator over the Set of FC
         while (it.hasNext()) {
-            MNKCell cell = it.next();
+            CXCell cell = it.next();
 
             int eval = evaluateUtil.evaluate(cell, player); // Evaluate our move
             if (eval == OUR_VICTORY) {
@@ -521,7 +526,7 @@ public final class CadregaBot implements MNKPlayer {
             if (evalOpponent == OUR_VICTORY) { // Does the opponent win?
                 // The opponent wins with a move, can we win in 1 move?
                 while (it.hasNext()) {
-                    MNKCell otherCell = it.next(); // This consumes the rest of the iterator
+                    CXCell otherCell = it.next(); // This consumes the rest of the iterator
 
                     if (evaluateUtil.isWinningCell(otherCell, player)) {
                         // Yes, we can win!
@@ -547,7 +552,7 @@ public final class CadregaBot implements MNKPlayer {
      * @param move The move to be saved.
      * @return The provided move.
      */
-    private MNKCell saveMove(MNKCell move) {
+    private CXCell saveMove(CXCell move) {
         board[move.i][move.j] = our;
         root = bestMove;
         return move;

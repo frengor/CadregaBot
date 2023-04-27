@@ -1,4 +1,4 @@
-package mnkgame.cadregaBot;
+package connectx.cadregaBot;
 
 /**
  * Utility class to find the optimized depth for an alphabeta visit.
@@ -36,7 +36,7 @@ public final class OptimizedDepth {
                 return depth;
             }
             depth++;
-            //System.out.println("VisitedNodes: " + visitedNodes);
+            //System.err.println("VisitedNodes: " + visitedNodes);
         }
 
         // Now visitedNodes < nodesToVisit, but we need to return a depth in which visitedNodes > nodesToVisit so we decrease by 1 the depth

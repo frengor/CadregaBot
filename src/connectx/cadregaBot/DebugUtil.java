@@ -1,6 +1,6 @@
-package mnkgame.cadregaBot;
+package connectx.cadregaBot;
 
-import mnkgame.MNKCellState;
+import connectx.CXCellState;
 
 import java.util.Arrays;
 
@@ -15,20 +15,20 @@ public final class DebugUtil {
      * @param board The board to be printed.
      * @param cells The cells of the board evaluated by the heuristic.
      */
-    public static void printTable(MNKCellState[][] board, EvaluatedCell[] cells) {
+    public static void printTable(CXCellState[][] board, EvaluatedCell[] cells) {
         int M = board.length;
         int N = board[0].length;
 
         class Printable {
             final int value;
-            final MNKCellState state;
+            final CXCellState state;
 
             public Printable(EvaluatedCell cell) {
                 this.value = cell.getValue();
-                this.state = MNKCellState.FREE;
+                this.state = CXCellState.FREE;
             }
 
-            public Printable(MNKCellState state) {
+            public Printable(CXCellState state) {
                 this.value = -1;
                 this.state = state;
             }
@@ -77,7 +77,7 @@ public final class DebugUtil {
             c[i] = '|';
         }
         for (int i = 0; i < M; i++) {
-            System.out.println(lines);
+            System.err.println(lines);
 
             char[] arr = new char[length];
             System.arraycopy(c, 0, arr, 0, length);
@@ -94,9 +94,9 @@ public final class DebugUtil {
                 }
             }
 
-            System.out.println(arr);
+            System.err.println(arr);
         }
-        System.out.println(lines);
+        System.err.println(lines);
     }
 
     // Private constructor
