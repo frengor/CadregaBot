@@ -10,7 +10,7 @@ import java.util.Arrays;
 public final class DebugUtil {
 
     /**
-     * Utility which prints the current state of the table to the standard output.
+     * Utility which prints the current state of the table to the standard error.
      *
      * @param board The board to be printed.
      * @param cells The cells of the board evaluated by the heuristic.
