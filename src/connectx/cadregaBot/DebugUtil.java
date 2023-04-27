@@ -37,7 +37,11 @@ public final class DebugUtil {
             public String toString() {
                 switch (state) {
                     case FREE:
-                        if (value >= 0) {
+                        if (value == CadregaBot.OUR_VICTORY) {
+                            return "OUR";
+                        } else if (value == CadregaBot.OPPONENT_VICTORY) {
+                            return "OPP";
+                        } else if (value >= 0) {
                             return Integer.toString(value);
                         } else {
                             return " ";
