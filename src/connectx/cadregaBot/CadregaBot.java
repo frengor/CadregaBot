@@ -5,7 +5,6 @@ import connectx.CXCell;
 import connectx.CXCellState;
 import connectx.CXPlayer;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -30,6 +29,7 @@ public final class CadregaBot implements CXPlayer {
     private long timeout, startTime, oldExecutionTime = -1;
 
     private CXCellState[][] board, tmpBoard; // board reflects the actual board state, tmpBoard is used for computations
+    private int[] heights, tmpHeights;
     private CXCellState our, opponent;
     private EvaluateUtil evaluateUtil;
     private Node root, bestMove; // root is the first node analyzed of the tree, bestMove is the best move found yet
@@ -73,11 +73,14 @@ public final class CadregaBot implements CXPlayer {
         // Create the boards and initialize them
         this.board = new CXCellState[M][N];
         this.tmpBoard = new CXCellState[M][N];
+        this.heights = new int[N];
+        this.tmpHeights = new int[N];
 
-        for (int i = 0; i < M; i++) {
-            for (int j = 0; j < N; j++) {
+        for (int j = 0; j < N; j++) {
+            for (int i = 0; i < M; i++) {
                 board[i][j] = CXCellState.FREE;
             }
+            this.heights[j] = 0;
         }
 
         // Run selectColumn on a dummy board to collect data in order to be able to calculate nodesAverage on our first (real) move
@@ -94,14 +97,13 @@ public final class CadregaBot implements CXPlayer {
 
             // We're the second to play, just place a dummy move
             cxBoard.markColumn(N / 2);
-            this.board[M - 1][N / 2] = opponent;
         }
 
         // Make sure tmpBoard is the same as board
         // This is not really needed, since it will be done by selectCell, that's just to be sure there aren't nulls in tmpBoard at the start of selectCell
         copyTmpBoard();
 
-        this.evaluateUtil = new EvaluateUtil(M, N, X, tmpBoard);
+        this.evaluateUtil = new EvaluateUtil(M, N, X, tmpBoard, tmpHeights);
 
         try {
             if (cxBoard.numOfFreeCells() > 0) { // Don't execute selectCell with zero free cells (this happens on (1, 1, 1) games when we are the second player)
@@ -111,10 +113,11 @@ public final class CadregaBot implements CXPlayer {
             // System.err.println("TIMEOUT");
         } finally {
             // Reset board, tmpBoard, root, bestMove and depth since we ran on a dummy board
-            for (int i = 0; i < M; i++) {
-                for (int j = 0; j < N; j++) {
+            for (int j = 0; j < N; j++) {
+                for (int i = 0; i < M; i++) {
                     board[i][j] = CXCellState.FREE;
                 }
+                heights[j] = 0;
             }
 
             copyTmpBoard();
@@ -187,7 +190,7 @@ public final class CadregaBot implements CXPlayer {
 
             // Actually calculates the visit depth
             depth = OptimizedDepth.optimizedDepth(3, columns.length, nodesAverage);
-            System.err.println("Depth found: " + depth);
+            // System.err.println("Depth found: " + depth);
         }
 
         // System.err.println("Nodes average: " + nodesAverage);
@@ -196,6 +199,7 @@ public final class CadregaBot implements CXPlayer {
         CXCell lastOpponentMove = B.getLastMove();
         if (lastOpponentMove != null) {
             this.board[lastOpponentMove.i][lastOpponentMove.j] = lastOpponentMove.state;
+            this.heights[lastOpponentMove.j]++;
         }
 
         // Update tmpBoard
@@ -261,6 +265,7 @@ public final class CadregaBot implements CXPlayer {
      * Copies board into tmpBoard.
      */
     private void copyTmpBoard() {
+        System.arraycopy(heights, 0, tmpHeights, 0, N);
         for (int i = 0; i < M; i++) {
             System.arraycopy(board[i], 0, tmpBoard[i], 0, N);
         }
@@ -330,6 +335,7 @@ public final class CadregaBot implements CXPlayer {
                 if (cxCell.i != 0) {
                     tmpCell = new CXCell(cxCell.i - 1, cxCell.j, CXCellState.FREE);
                     FC.add(tmpCell);
+                    tmpHeights[cxCell.j]++;
                 }
 
                 // Create (or get) the child node
@@ -356,6 +362,7 @@ public final class CadregaBot implements CXPlayer {
                 tmpBoard[cxCell.i][cxCell.j] = CXCellState.FREE;
                 if (tmpCell != null) {
                     FC.remove(tmpCell);
+                    tmpHeights[cxCell.j]--;
                 }
                 FC.add(cxCell);
 
@@ -377,6 +384,7 @@ public final class CadregaBot implements CXPlayer {
                 if (cxCell.i != 0) {
                     tmpCell = new CXCell(cxCell.i - 1, cxCell.j, CXCellState.FREE);
                     FC.add(tmpCell);
+                    tmpHeights[cxCell.j]++;
                 }
 
                 // Create (or get) the child node
@@ -403,6 +411,7 @@ public final class CadregaBot implements CXPlayer {
                 tmpBoard[cxCell.i][cxCell.j] = CXCellState.FREE;
                 if (tmpCell != null) {
                     FC.remove(tmpCell);
+                    tmpHeights[cxCell.j]--;
                 }
                 FC.add(cxCell);
 
@@ -459,6 +468,7 @@ public final class CadregaBot implements CXPlayer {
                 if (cxCell.i != 0) {
                     tmpCell = new CXCell(cxCell.i - 1, cxCell.j, CXCellState.FREE);
                     FC.add(tmpCell);
+                    tmpHeights[cxCell.j]++;
                 }
 
                 // Create (or get) the child node
@@ -485,6 +495,7 @@ public final class CadregaBot implements CXPlayer {
                 tmpBoard[cxCell.i][cxCell.j] = CXCellState.FREE;
                 if (tmpCell != null) {
                     FC.remove(tmpCell);
+                    tmpHeights[cxCell.j]--;
                 }
                 FC.add(cxCell);
 
@@ -513,7 +524,7 @@ public final class CadregaBot implements CXPlayer {
         for (CXCell cell : FC) {
             sum += evaluateUtil.simpleEvaluate(cell, our);
             sum -= evaluateUtil.simpleEvaluate(cell, opponent);
-            /*for (int i = cell.i + 1; i < M; i++) {
+            /*for (int i = cell.i - 1; i >= 0; i--) {
                 final CXCell fc = new CXCell(i, cell.j, CXCellState.FREE);
                 sum += evaluateUtil.simpleEvaluate(fc, our);
                 sum -= evaluateUtil.simpleEvaluate(fc, opponent);
@@ -575,6 +586,7 @@ public final class CadregaBot implements CXPlayer {
      */
     private CXCell saveMove(CXCell move) {
         board[move.i][move.j] = our;
+        heights[move.j]++;
         root = bestMove;
         return move;
     }
